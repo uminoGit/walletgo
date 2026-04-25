@@ -1,6 +1,17 @@
 # WalletGo 💰
 
-Control financiero personal para estudiantes. Stack: React + TypeScript (frontend) · Node.js + Express + MongoDB (backend).
+Control financiero personal para estudiantes. Registra ingresos y gastos, define un presupuesto mensual y visualiza tu situación financiera en tiempo real.
+
+---
+
+## Stack
+
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | React 18 + TypeScript + Vite |
+| Backend | Node.js + Express + TypeScript |
+| Base de datos | MongoDB + Mongoose |
+| HTTP client | Axios |
 
 ---
 
@@ -30,7 +41,6 @@ walletgo/
 │
 └── frontend/
     ├── public/
-    │   └── index.html
     ├── src/
     │   ├── components/
     │   │   ├── Header.tsx
@@ -49,6 +59,8 @@ walletgo/
     │   │   └── format.ts
     │   ├── App.tsx
     │   └── index.tsx
+    ├── index.html
+    ├── vite.config.ts
     ├── .env
     ├── package.json
     └── tsconfig.json
@@ -59,9 +71,8 @@ walletgo/
 ## Requisitos previos
 
 - **Node.js** v18 o superior → https://nodejs.org
-- **MongoDB** corriendo localmente en el puerto `27017`
-  - Instalación: https://www.mongodb.com/try/download/community
-  - O usar MongoDB Atlas (ver sección abajo)
+- **MongoDB Community** corriendo localmente en el puerto `27017` → https://www.mongodb.com/try/download/community
+  - Instala con las opciones por defecto (instala MongoDB como servicio de Windows, arranca automáticamente)
 
 ---
 
@@ -75,7 +86,11 @@ npm install
 npm run dev
 ```
 
-El servidor corre en `http://localhost:5000`
+Debes ver:
+```
+MongoDB connected successfully
+Server running on http://localhost:5000
+```
 
 ### 2. Frontend
 
@@ -84,7 +99,7 @@ Abre otra terminal:
 ```bash
 cd walletgo/frontend
 npm install
-npm start
+npm run dev
 ```
 
 La app abre en `http://localhost:3000`
@@ -102,16 +117,18 @@ NODE_ENV=development
 
 ### frontend/.env
 ```
-REACT_APP_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
 ---
 
 ## MongoDB Atlas (alternativa a instalación local)
 
-1. Crea cuenta en https://cloud.mongodb.com
-2. Crea un cluster gratuito
-3. Obtén el connection string y reemplaza `MONGODB_URI` en `backend/.env`:
+1. Crea cuenta gratuita en https://cloud.mongodb.com
+2. Crea un cluster **M0 (Free)**
+3. En "Database Access" crea un usuario con contraseña
+4. En "Network Access" agrega `0.0.0.0/0`
+5. En "Connect" copia el connection string y reemplaza en `backend/.env`:
 
 ```
 MONGODB_URI=mongodb+srv://<usuario>:<password>@cluster0.xxxxx.mongodb.net/walletgo
@@ -127,12 +144,13 @@ MONGODB_URI=mongodb+srv://<usuario>:<password>@cluster0.xxxxx.mongodb.net/wallet
 | POST | /api/transactions | Crear transacción |
 | PUT | /api/transactions/:id | Actualizar transacción |
 | DELETE | /api/transactions/:id | Eliminar transacción |
-| GET | /api/transactions/summary | Resumen del mes actual |
-| GET | /api/budget | Obtener presupuesto |
-| POST | /api/budget | Crear o actualizar presupuesto |
+| GET | /api/transactions/summary | Resumen financiero del mes actual |
+| GET | /api/budget | Obtener presupuesto mensual |
+| POST | /api/budget | Crear o actualizar presupuesto mensual |
 
-### Ejemplo: crear transacción
+### Ejemplos
 
+**Crear transacción:**
 ```bash
 curl -X POST http://localhost:5000/api/transactions \
   -H "Content-Type: application/json" \
@@ -144,8 +162,7 @@ curl -X POST http://localhost:5000/api/transactions \
   }'
 ```
 
-### Ejemplo: crear presupuesto
-
+**Crear presupuesto:**
 ```bash
 curl -X POST http://localhost:5000/api/budget \
   -H "Content-Type: application/json" \
@@ -154,17 +171,30 @@ curl -X POST http://localhost:5000/api/budget \
 
 ---
 
-## Scripts disponibles
+## Scripts
 
 ### Backend
 | Comando | Acción |
 |---------|--------|
-| `npm run dev` | Inicia servidor con hot-reload |
-| `npm run build` | Compila TypeScript a JavaScript |
+| `npm run dev` | Servidor con hot-reload |
+| `npm run build` | Compila TypeScript |
 | `npm start` | Inicia versión compilada |
 
 ### Frontend
 | Comando | Acción |
 |---------|--------|
-| `npm start` | Inicia en modo desarrollo |
+| `npm run dev` | Inicia en modo desarrollo |
 | `npm run build` | Build de producción |
+| `npm run preview` | Preview del build |
+
+---
+
+## Funcionalidades
+
+- Registrar ingresos y gastos con categoría, descripción y fecha
+- Filtrar transacciones por tipo (todas / ingresos / gastos)
+- Eliminar transacciones
+- Resumen mensual: balance, total ingresos, total gastos
+- Presupuesto mensual con barra de progreso y alerta si se excede
+- Diseño responsive (móvil y escritorio)
+- Validación de formularios en frontend y backend
