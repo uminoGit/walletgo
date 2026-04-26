@@ -788,3 +788,7 @@ body {
 }
 
 .edit-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.form-section,
+.budget-section {
+  margin: 0 auto;
+}

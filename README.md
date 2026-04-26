@@ -1,6 +1,6 @@
 # WalletGo 💰
 
-Control financiero personal para estudiantes. Registra ingresos y gastos, define un presupuesto mensual y visualiza tu situación financiera en tiempo real.
+Aplicación de control financiero personal para estudiantes universitarios. Registra ingresos y gastos, visualiza tu situación financiera con gráficas, define un presupuesto mensual y gestiona tus transacciones con autenticación por usuario.
 
 ---
 
@@ -11,7 +11,21 @@ Control financiero personal para estudiantes. Registra ingresos y gastos, define
 | Frontend | React 18 + TypeScript + Vite |
 | Backend | Node.js + Express + TypeScript |
 | Base de datos | MongoDB + Mongoose |
+| Autenticación | JWT + bcryptjs |
 | HTTP client | Axios |
+| Gráficas | Recharts |
+
+---
+
+## Funcionalidades
+
+- **Autenticación** — registro e inicio de sesión con email y contraseña. Cada usuario solo ve sus propios datos.
+- **Dashboard** — balance total, ingresos y gastos del mes actual, barra de progreso del presupuesto y gráfica de dona por categoría.
+- **Transacciones** — crear, editar y eliminar ingresos y gastos con categoría, descripción y fecha.
+- **Historial** — lista de todas las transacciones con filtros por tipo (todas / ingresos / gastos).
+- **Presupuesto mensual** — definir un límite de gasto con alerta visual si se excede.
+- **Gráfica por categoría** — visualización de gastos distribuidos por categoría en gráfica de dona.
+- **Diseño responsive** — funciona en móvil y escritorio.
 
 ---
 
@@ -24,14 +38,18 @@ walletgo/
 │   │   ├── config/
 │   │   │   └── database.ts
 │   │   ├── controllers/
+│   │   │   ├── authController.ts
 │   │   │   ├── transactionController.ts
 │   │   │   └── budgetController.ts
 │   │   ├── middleware/
+│   │   │   ├── auth.ts
 │   │   │   └── errorHandler.ts
 │   │   ├── models/
+│   │   │   ├── User.ts
 │   │   │   ├── Transaction.ts
 │   │   │   └── Budget.ts
 │   │   ├── routes/
+│   │   │   ├── authRoutes.ts
 │   │   │   ├── transactionRoutes.ts
 │   │   │   └── budgetRoutes.ts
 │   │   └── index.ts
@@ -41,14 +59,19 @@ walletgo/
 │
 └── frontend/
     ├── public/
+    │   └── logo.png
     ├── src/
     │   ├── components/
+    │   │   ├── AuthScreen.tsx
     │   │   ├── Header.tsx
     │   │   ├── Dashboard.tsx
+    │   │   ├── CategoryChart.tsx
     │   │   ├── TransactionForm.tsx
     │   │   ├── TransactionList.tsx
+    │   │   ├── EditModal.tsx
     │   │   └── BudgetPanel.tsx
     │   ├── context/
+    │   │   ├── AuthContext.tsx
     │   │   └── WalletContext.tsx
     │   ├── styles/
     │   │   └── global.css
@@ -71,8 +94,8 @@ walletgo/
 ## Requisitos previos
 
 - **Node.js** v18 o superior → https://nodejs.org
-- **MongoDB Community** corriendo localmente en el puerto `27017` → https://www.mongodb.com/try/download/community
-  - Instala con las opciones por defecto (instala MongoDB como servicio de Windows, arranca automáticamente)
+- **MongoDB Community** corriendo en `localhost:27017` → https://www.mongodb.com/try/download/community
+  - Instalar con opciones por defecto (MongoDB corre como servicio de Windows automáticamente)
 
 ---
 
@@ -113,6 +136,8 @@ La app abre en `http://localhost:3000`
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/walletgo
 NODE_ENV=development
+JWT_SECRET=walletgo_super_secret_key_cambiar_en_produccion
+JWT_EXPIRES_IN=7d
 ```
 
 ### frontend/.env
@@ -122,52 +147,69 @@ VITE_API_URL=http://localhost:5000/api
 
 ---
 
-## MongoDB Atlas (alternativa a instalación local)
+## Endpoints de la API
 
-1. Crea cuenta gratuita en https://cloud.mongodb.com
-2. Crea un cluster **M0 (Free)**
-3. En "Database Access" crea un usuario con contraseña
-4. En "Network Access" agrega `0.0.0.0/0`
-5. En "Connect" copia el connection string y reemplaza en `backend/.env`:
+### Autenticación
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | /api/auth/register | Crear cuenta | No |
+| POST | /api/auth/login | Iniciar sesión | No |
+| GET | /api/auth/me | Obtener usuario actual | Sí |
 
+### Transacciones
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | /api/transactions | Listar transacciones del usuario | Sí |
+| POST | /api/transactions | Crear transacción | Sí |
+| PUT | /api/transactions/:id | Editar transacción | Sí |
+| DELETE | /api/transactions/:id | Eliminar transacción | Sí |
+| GET | /api/transactions/summary | Resumen financiero del mes | Sí |
+
+### Presupuesto
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | /api/budget | Obtener presupuesto del usuario | Sí |
+| POST | /api/budget | Crear o actualizar presupuesto | Sí |
+
+Todas las rutas protegidas requieren header:
 ```
-MONGODB_URI=mongodb+srv://<usuario>:<password>@cluster0.xxxxx.mongodb.net/walletgo
+Authorization: Bearer <token>
 ```
 
 ---
 
-## Endpoints de la API
+## Modelos de base de datos
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | /api/transactions | Listar todas las transacciones |
-| POST | /api/transactions | Crear transacción |
-| PUT | /api/transactions/:id | Actualizar transacción |
-| DELETE | /api/transactions/:id | Eliminar transacción |
-| GET | /api/transactions/summary | Resumen financiero del mes actual |
-| GET | /api/budget | Obtener presupuesto mensual |
-| POST | /api/budget | Crear o actualizar presupuesto mensual |
+### User
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| name | String | Nombre del usuario |
+| email | String | Email único |
+| password | String | Contraseña encriptada con bcrypt |
 
-### Ejemplos
+### Transaction
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| amount | Number | Monto de la transacción |
+| type | String | `income` o `expense` |
+| category | String | Categoría seleccionada |
+| description | String | Descripción del movimiento |
+| date | Date | Fecha de la transacción |
+| user | ObjectId | Referencia al usuario dueño |
 
-**Crear transacción:**
-```bash
-curl -X POST http://localhost:5000/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": 250,
-    "type": "expense",
-    "category": "Alimentación",
-    "description": "Tacos en el campus"
-  }'
-```
+### Budget
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| monthlyLimit | Number | Límite de gasto mensual |
+| user | ObjectId | Referencia al usuario dueño |
 
-**Crear presupuesto:**
-```bash
-curl -X POST http://localhost:5000/api/budget \
-  -H "Content-Type: application/json" \
-  -d '{ "monthlyLimit": 5000 }'
-```
+---
+
+## Categorías disponibles
+
+**Ingresos:** Salario, Beca, Freelance, Regalo, Inversión, Otro ingreso
+
+**Gastos:** Alimentación, Transporte, Educación, Entretenimiento, Salud, Ropa, Tecnología, Servicios, Otro gasto
 
 ---
 
@@ -189,12 +231,23 @@ curl -X POST http://localhost:5000/api/budget \
 
 ---
 
-## Funcionalidades
+## MongoDB Atlas (alternativa a instalación local)
 
-- Registrar ingresos y gastos con categoría, descripción y fecha
-- Filtrar transacciones por tipo (todas / ingresos / gastos)
-- Eliminar transacciones
-- Resumen mensual: balance, total ingresos, total gastos
-- Presupuesto mensual con barra de progreso y alerta si se excede
-- Diseño responsive (móvil y escritorio)
-- Validación de formularios en frontend y backend
+1. Crea cuenta gratuita en https://cloud.mongodb.com
+2. Crea un cluster **M0 (Free)**
+3. En "Database Access" crea un usuario con contraseña
+4. En "Network Access" agrega `0.0.0.0/0`
+5. Copia el connection string y reemplaza en `backend/.env`:
+
+```
+MONGODB_URI=mongodb+srv://<usuario>:<password>@cluster0.xxxxx.mongodb.net/walletgo
+```
+
+---
+
+## Notas de seguridad
+
+- Las contraseñas se encriptan con bcrypt (12 rounds) antes de guardarse
+- El JWT expira en 7 días
+- Cada usuario solo puede ver, editar y eliminar sus propios datos
+- Cambiar `JWT_SECRET` por una cadena segura antes de desplegar a producción
