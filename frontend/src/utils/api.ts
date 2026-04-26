@@ -12,6 +12,12 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem('wg_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 export const transactionApi = {
   getAll: async (): Promise<Transaction[]> => {
     const { data } = await api.get<ApiResponse<Transaction[]>>('/transactions');

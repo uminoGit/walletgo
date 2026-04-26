@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
 export interface ITransaction extends Document {
   amount: number;
@@ -6,6 +6,7 @@ export interface ITransaction extends Document {
   category: string;
   description: string;
   date: Date;
+  user: Types.ObjectId;
 }
 
 const TransactionSchema = new Schema<ITransaction>(
@@ -35,6 +36,11 @@ const TransactionSchema = new Schema<ITransaction>(
     date: {
       type: Date,
       default: Date.now,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
   },
   { timestamps: true }

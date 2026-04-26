@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { Budget } from '../models/Budget';
 
+const userId = (req: Request): string => (req as any).userId;
+
 export const setBudget = async (req: Request, res: Response): Promise<void> => {
   try {
     const { monthlyLimit } = req.body;
@@ -15,7 +17,7 @@ export const setBudget = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const existing = await Budget.findOne();
+    const existing = await Budget.findOne({ user: userId(req) });
 
     let budget;
     if (existing) {
@@ -25,7 +27,7 @@ export const setBudget = async (req: Request, res: Response): Promise<void> => {
         { new: true, runValidators: true }
       );
     } else {
-      budget = await Budget.create({ monthlyLimit });
+      budget = await Budget.create({ monthlyLimit, user: userId(req) });
     }
 
     res.status(200).json({ success: true, data: budget });
@@ -34,9 +36,9 @@ export const setBudget = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const getBudget = async (_req: Request, res: Response): Promise<void> => {
+export const getBudget = async (req: Request, res: Response): Promise<void> => {
   try {
-    const budget = await Budget.findOne();
+    const budget = await Budget.findOne({ user: userId(req) });
 
     if (!budget) {
       res.status(200).json({ success: true, data: null });

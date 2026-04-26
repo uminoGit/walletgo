@@ -6,8 +6,11 @@ import {
   updateTransaction,
   getSummary,
 } from '../controllers/transactionController';
+import { protect } from '../middleware/auth';
 
 const router = Router();
+
+router.use(protect);
 
 router.get('/summary', getSummary);
 router.get('/', getTransactions);

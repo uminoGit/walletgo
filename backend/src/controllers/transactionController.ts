@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { Transaction } from '../models/Transaction';
 
+const userId = (req: Request): string => (req as any).userId;
+
 export const createTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
     const { amount, type, category, description, date } = req.body;
@@ -26,6 +28,7 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
       category: category.trim(),
       description: description.trim(),
       date: date ? new Date(date) : new Date(),
+      user: userId(req),
     });
 
     res.status(201).json({ success: true, data: transaction });
@@ -34,9 +37,9 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const getTransactions = async (_req: Request, res: Response): Promise<void> => {
+export const getTransactions = async (req: Request, res: Response): Promise<void> => {
   try {
-    const transactions = await Transaction.find().sort({ date: -1 });
+    const transactions = await Transaction.find({ user: userId(req) }).sort({ date: -1 });
     res.status(200).json({ success: true, data: transactions });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error });
@@ -45,8 +48,10 @@ export const getTransactions = async (_req: Request, res: Response): Promise<voi
 
 export const deleteTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const transaction = await Transaction.findByIdAndDelete(id);
+    const transaction = await Transaction.findOneAndDelete({
+      _id: req.params.id,
+      user: userId(req),
+    });
 
     if (!transaction) {
       res.status(404).json({ success: false, message: 'Transaction not found' });
@@ -61,7 +66,6 @@ export const deleteTransaction = async (req: Request, res: Response): Promise<vo
 
 export const updateTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
     const { amount, type, category, description, date } = req.body;
 
     if (type && !['income', 'expense'].includes(type)) {
@@ -81,10 +85,11 @@ export const updateTransaction = async (req: Request, res: Response): Promise<vo
     if (description) updateData.description = description.trim();
     if (date) updateData.date = new Date(date);
 
-    const transaction = await Transaction.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const transaction = await Transaction.findOneAndUpdate(
+      { _id: req.params.id, user: userId(req) },
+      updateData,
+      { new: true, runValidators: true }
+    );
 
     if (!transaction) {
       res.status(404).json({ success: false, message: 'Transaction not found' });
@@ -97,12 +102,15 @@ export const updateTransaction = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const getSummary = async (_req: Request, res: Response): Promise<void> => {
+export const getSummary = async (req: Request, res: Response): Promise<void> => {
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const transactions = await Transaction.find({ date: { $gte: startOfMonth } });
+    const transactions = await Transaction.find({
+      user: userId(req),
+      date: { $gte: startOfMonth },
+    });
 
     const totalIncome = transactions
       .filter((t) => t.type === 'income')

@@ -1,9 +1,10 @@
 import React from 'react';
 import { useWallet } from '../context/WalletContext';
 import { formatCurrency } from '../utils/format';
+import CategoryChart from './CategoryChart';
 
 const Dashboard: React.FC = () => {
-  const { summary, budget, loading } = useWallet();
+  const { summary, budget, loading, transactions } = useWallet();
 
   if (loading) return <div className="card loading-card">Cargando resumen...</div>;
   if (!summary) return null;
@@ -63,6 +64,8 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       )}
+
+      <CategoryChart transactions={transactions} />
     </section>
   );
 };
