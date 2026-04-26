@@ -18,6 +18,7 @@ interface WalletContextType {
   fetchAll: () => Promise<void>;
   addTransaction: (data: TransactionFormData) => Promise<void>;
   removeTransaction: (id: string) => Promise<void>;
+  editTransaction: (id: string, data: TransactionFormData) => Promise<void>;
   saveBudget: (limit: number) => Promise<void>;
   clearError: () => void;
 }
@@ -75,6 +76,19 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const editTransaction = async (id: string, data: TransactionFormData) => {
+    setError(null);
+    try {
+      const updated = await transactionApi.update(id, data);
+      setTransactions((prev) => prev.map((t) => (t._id === id ? updated : t)));
+      const sum = await transactionApi.getSummary();
+      setSummary(sum);
+    } catch {
+      setError('Error al editar la transacción.');
+      throw new Error('Failed to edit transaction');
+    }
+  };
+
   const saveBudget = async (limit: number) => {
     setError(null);
     try {
@@ -103,6 +117,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         fetchAll,
         addTransaction,
         removeTransaction,
+        editTransaction,
         saveBudget,
         clearError,
       }}

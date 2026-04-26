@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useWallet } from '../context/WalletContext';
+import { Transaction } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
+import EditModal from './EditModal';
 
 const TransactionList: React.FC = () => {
   const { transactions, removeTransaction, loading } = useWallet();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [editing, setEditing] = useState<Transaction | null>(null);
 
   const filtered = transactions.filter((t) => filter === 'all' || t.type === filter);
 
@@ -56,6 +59,13 @@ const TransactionList: React.FC = () => {
                 {tx.type === 'income' ? '+' : '−'} {formatCurrency(tx.amount)}
               </span>
               <button
+                className="edit-btn"
+                onClick={() => setEditing(tx)}
+                aria-label="Editar transacción"
+              >
+                ✎
+              </button>
+              <button
                 className="delete-btn"
                 onClick={() => handleDelete(tx._id)}
                 disabled={deletingId === tx._id}
@@ -67,6 +77,10 @@ const TransactionList: React.FC = () => {
           </li>
         ))}
       </ul>
+
+      {editing && (
+        <EditModal transaction={editing} onClose={() => setEditing(null)} />
+      )}
     </section>
   );
 };
