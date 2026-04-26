@@ -51,7 +51,7 @@ const AuthScreen: React.FC = () => {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-brand-icon">💰</span>
+          <img src="/logo.png" alt="WalletGo" className="auth-brand-logo" />
           <h1 className="auth-brand-name">WalletGo</h1>
           <p className="auth-brand-sub">Control financiero para estudiantes</p>
         </div>
