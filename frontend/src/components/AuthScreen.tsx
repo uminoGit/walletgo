@@ -53,7 +53,6 @@ const AuthScreen: React.FC = () => {
         <div className="auth-brand">
           <img src="/logo.png" alt="WalletGo" className="auth-brand-logo" />
           <h1 className="auth-brand-name">WalletGo</h1>
-          <p className="auth-brand-sub">Control financiero para estudiantes</p>
         </div>
 
         <div className="auth-tabs">

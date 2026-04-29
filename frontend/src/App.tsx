@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { WalletProvider } from './context/WalletContext';
+import { BusinessProvider } from './context/BusinessContext';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import BudgetPanel from './components/BudgetPanel';
 import AuthScreen from './components/AuthScreen';
+import ModeSelector from './components/ModeSelector';
+import BusinessDashboard from './components/BusinessDashboard';
 import './styles/global.css';
 
 const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, activeMode } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [modeSelected, setModeSelected] = useState(false);
 
   if (loading) {
     return (
@@ -24,10 +28,40 @@ const AppContent: React.FC = () => {
 
   if (!user) return <AuthScreen />;
 
+  if (!modeSelected) {
+    return (
+      <ModeSelector onSelect={() => setModeSelected(true)} />
+    );
+  }
+
+  if (activeMode === 'business') {
+    return (
+      <BusinessProvider>
+        <div className="app">
+          <Header
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onSwitchMode={() => setModeSelected(false)}
+          />
+          <main className="main-content">
+            <BusinessDashboard />
+          </main>
+          <footer className="app-footer">
+            <p>WalletGo — Modo Negocio</p>
+          </footer>
+        </div>
+      </BusinessProvider>
+    );
+  }
+
   return (
     <WalletProvider>
       <div className="app">
-        <Header activeTab={activeTab} onTabChange={setActiveTab} />
+        <Header
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onSwitchMode={() => setModeSelected(false)}
+        />
         <main className="main-content">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'add' && <TransactionForm />}
