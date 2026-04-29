@@ -7,6 +7,7 @@ export interface ITransaction extends Document {
   description: string;
   date: Date;
   user: Types.ObjectId;
+  source: 'personal' | 'business';
 }
 
 const TransactionSchema = new Schema<ITransaction>(
@@ -41,6 +42,11 @@ const TransactionSchema = new Schema<ITransaction>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+    },
+    source: {
+      type: String,
+      enum: ['personal', 'business'],
+      default: 'personal',
     },
   },
   { timestamps: true }

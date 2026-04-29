@@ -5,6 +5,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  mode: 'personal' | 'business';
+  businessName?: string;
   comparePassword(candidate: string): Promise<boolean>;
 }
 
@@ -28,6 +30,16 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
+    },
+    mode: {
+      type: String,
+      enum: ['personal', 'business'],
+      default: 'personal',
+    },
+    businessName: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Business name cannot exceed 100 characters'],
     },
   },
   { timestamps: true }

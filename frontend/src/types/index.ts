@@ -6,6 +6,7 @@ export interface Transaction {
   description: string;
   date: string;
   createdAt: string;
+  source: 'personal' | 'business';
 }
 
 export interface TransactionFormData {
@@ -26,6 +27,32 @@ export interface Summary {
 export interface Budget {
   _id?: string;
   monthlyLimit: number;
+}
+
+export interface BusinessSummary {
+  totalVentas: number;
+  totalGastos: number;
+  ganancia: number;
+  transacciones: Transaction[];
+  cortesRecientes: Corte[];
+  fecha: string;
+}
+
+export interface Corte {
+  _id: string;
+  date: string;
+  totalVentas: number;
+  totalGastos: number;
+  ganancia: number;
+  nota?: string;
+}
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  mode: 'personal' | 'business';
+  businessName?: string;
 }
 
 export interface ApiResponse<T> {
@@ -53,4 +80,13 @@ export const EXPENSE_CATEGORIES = [
   'Tecnología',
   'Servicios',
   'Otro gasto',
+] as const;
+
+export const BUSINESS_EXPENSE_CATEGORIES = [
+  'Compras de mercancía',
+  'Servicios (luz, agua, gas)',
+  'Renta',
+  'Transporte',
+  'Mantenimiento',
+  'Otro gasto negocio',
 ] as const;

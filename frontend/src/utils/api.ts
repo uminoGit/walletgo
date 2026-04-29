@@ -4,6 +4,8 @@ import {
   TransactionFormData,
   Summary,
   Budget,
+  BusinessSummary,
+  Corte,
   ApiResponse,
 } from '../types';
 
@@ -58,5 +60,47 @@ export const budgetApi = {
   set: async (monthlyLimit: number): Promise<Budget> => {
     const { data } = await api.post<ApiResponse<Budget>>('/budget', { monthlyLimit });
     return data.data;
+  },
+};
+
+export const businessApi = {
+  getSummary: async (): Promise<BusinessSummary> => {
+    const { data } = await api.get<ApiResponse<BusinessSummary>>('/business/summary');
+    return data.data;
+  },
+
+  registrarVenta: async (amount: number, description?: string): Promise<Transaction> => {
+    const { data } = await api.post<ApiResponse<Transaction>>('/business/venta', {
+      amount,
+      description,
+    });
+    return data.data;
+  },
+
+  registrarGasto: async (
+    amount: number,
+    description: string,
+    category: string
+  ): Promise<Transaction> => {
+    const { data } = await api.post<ApiResponse<Transaction>>('/business/gasto', {
+      amount,
+      description,
+      category,
+    });
+    return data.data;
+  },
+
+  hacerCorte: async (nota?: string): Promise<Corte> => {
+    const { data } = await api.post<ApiResponse<Corte>>('/business/corte', { nota });
+    return data.data;
+  },
+
+  getCortes: async (): Promise<Corte[]> => {
+    const { data } = await api.get<ApiResponse<Corte[]>>('/business/cortes');
+    return data.data;
+  },
+
+  activar: async (businessName: string): Promise<void> => {
+    await api.post('/business/activar', { businessName });
   },
 };
